@@ -1,0 +1,822 @@
+index:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Document</title>
+</head>
+<body>
+
+    <div class="container">
+        <div class="buttons">
+            <!-- <img src="Pokeball.jpeg" id="pokeball2" class="pokeball" onclick="fermaButton()">
+            <img src="Pokeball.jpeg" id="home" class="pokeball" onclick="avviaButton()"> -->
+            <img src="Pokeball.jpeg" id="home" class="pokeball" onclick="location.href='index1.html'">
+        </div>
+        <div class="card">
+            <div class="wrapper">
+                <div id="pokemon-image"></div>
+                <img id="hover-image" class="hover-image" src="">
+            </div>
+            <p id="nome-pokemon"></p>
+        </div>
+        <button id="pokeball" style="border: none; outline: none; background-color: transparent;" onclick="catchPokemon()"></button>
+        <button id="clear-pokedex-button" onclick="clearPokedex()">Svuota Pokedex</button>
+
+    </div>
+
+
+    <!-- <div id="pokedex-container">
+        <div id="pokedex-pokemon-image"></div>
+        <p id="pokedex-nome-pokemon"></p>
+    </div> -->
+
+    <script src="script.js"></script>
+</body>
+</html>
+script://da 1 a 1025, da 10001 a 10277
+//zekrom 644
+const pokemonInfo=[]; 
+function getRandomPokemonId() {
+    return Math.floor(Math.random() * 1302) + 1;
+}
+
+function timeAlive () {
+    return Math.floor(Math.random() * (8000 - 7000 + 1)) + 7000;
+}
+
+function timeNotAlive() {
+    return Math.floor(Math.random() * (2000 - 1000 + 1)) + 1000;
+}
+
+async function esiste(url) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+}
+
+async function fetchPokemonImage(pokemonId) {
+    const url = `https://pokeapi.co/api/v2/pokemon?limit=1&offset=${pokemonId}`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Qualcosa non va');
+        }
+        const pokemonResult = await response.json();
+        const pokemonInfoUrl = pokemonResult.results[0].url;
+        const pokemonInfoResponse = await fetch(pokemonInfoUrl);
+        const data = await pokemonInfoResponse.json();
+        pokemonInfo.pop();
+        pokemonInfo.push(data);
+        const imgPokeball = document.createElement('img');
+        imgPokeball.src = "pokeball.png";
+        const pokemonName = data.forms[0].name;
+        const urlOver = `https://raw.githubusercontent.com/tdmalone/pokecss-media/master/graphics/pokemon/ani-front-shiny/${pokemonName}.gif`;
+
+        //console.log("URL GIF:", urlOver);
+
+        const frontImageUrl = data.sprites.front_default;
+        const img = document.createElement('img');
+        img.src = frontImageUrl;
+        img.classList.add('cover-image');
+        const hoverImg = document.getElementById('hover-image');
+        // const imgPokeball = document.createElement('img');
+        // imgPokeball.src = "pokeball.png";
+        //hoverImg.src = urlOver; // URL della GIF dinamica
+        if (await esiste(urlOver)) {
+            hoverImg.src = urlOver;
+        } else {
+            hoverImg.src = frontImageUrl;
+        }
+
+        document.getElementById('pokemon-image').appendChild(img);
+        document.getElementById('nome-pokemon').textContent = data.forms[0].name;
+        document.getElementById('pokeball').appendChild(imgPokeball);
+
+    } catch (error) {
+        console.error('Errore nella fetch:', error);
+    }
+}
+
+
+
+// function startLoop() {
+//     setInterval(() => {
+//         const randomPokemonId = getRandomPokemonId();
+//         fetchPokemonImage(randomPokemonId);
+//     }, 5000);
+// }
+let running = true;
+function startLoop() {
+    if(running) {
+        loop()
+    }
+}
+
+function fermaButton() {
+    if(running){
+    running = false;
+
+    document.getElementById('pokemon-image').innerHTML = '';
+    document.getElementById('hover-image').innerHTML = '';
+    document.getElementById('pokeball').innerHTML = '';
+    
+    const lastPokemon = pokedex[pokedex.length-1];
+
+    // Mostra l'immagine del Pokémon
+    const img = document.createElement('img');
+    img.src = lastPokemon.sprites.front_default;
+    img.classList.add('cover-image');
+    document.getElementById('pokemon-image').appendChild(img);
+
+    // Mostra il nome del Pokémon
+    document.getElementById('nome-pokemon').textContent = lastPokemon.forms[0].name;
+
+    // Gestisci la GIF per l'hover effect
+    const hoverImg = document.getElementById('hover-image');
+    const gifUrl = `https://raw.githubusercontent.com/tdmalone/pokecss-media/master/graphics/pokemon/ani-front-shiny/${lastPokemon.forms[0].name}.gif`;
+
+    esiste(gifUrl).then((exists) => {
+        hoverImg.src = exists ? gifUrl : lastPokemon.sprites.front_default;
+    });
+
+    visualizzaPokemon();
+    document.getElementById('pokedex-container').style.display = 'flex';
+    }
+    
+}
+
+function avviaButton() {
+    if(!running){
+    running = true;    
+    document.getElementById('pokedex-pokemon-image').innerHTML = '';
+    document.getElementById('pokedex-nome-pokemon').innerHTML = '';
+    document.getElementById('pokemon-image').innerHTML = '';
+    document.getElementById('hover-image').innerHTML = '';
+    // document.getElementById('nome-pokemon').innerHTML = '';
+    document.getElementById('pokeball').innerHTML = '';
+    //document.getElementById('pokeball2').innerHTML = '';
+    //document.getElementById('home').innerHTML = '';
+    loop();
+    }
+}
+
+async function loop() {
+
+    const randomPokemonId = getRandomPokemonId();
+    await fetchPokemonImage(randomPokemonId);
+    setTimeout(() => {
+        document.getElementById('pokemon-image').innerHTML = '';
+        document.getElementById('nome-pokemon').innerHTML = '';
+        document.getElementById('pokeball').innerHTML = '';
+        document.querySelector('.card').classList.add('hidden');
+        setTimeout(startLoop, timeNotAlive());
+    }, timeAlive());
+}
+
+startLoop();
+
+let pokedex=[];
+function loadPokedex(){
+    pokedex = JSON.parse(localStorage.getItem("savedPokemon")) || [];
+}
+function clearPokedex() {
+    localStorage.removeItem("savedPokemon");
+    pokedex = [];
+    console.log("Pokedex eliminata con successo!");
+}
+function catchPokemon(){
+    const giaCatturato = pokedex.some(pokemon => pokemon.forms[0].name === pokemonInfo[0].forms[0].name);
+    
+    if (giaCatturato) {
+        // alert(`${pokemonInfo[0].name} è già stato catturato!`);
+        return;
+    }
+    pokedex.push(pokemonInfo[0]);
+    localStorage.setItem("savedPokemon",JSON.stringify(pokedex));
+    console.log("Pokémon salvato:", pokemonInfo[0]);
+    //visualizzaPokemon();
+    // localStorage.clear("savedPokemon");
+}
+
+function mostraPokemonInCard(pokemon) {
+    // Pulisci la card principale
+    document.getElementById('pokemon-image').innerHTML = '';
+    document.getElementById('nome-pokemon').innerHTML = '';
+    document.getElementById('pokeball').innerHTML = '';
+
+    // Mostra l'immagine del Pokémon
+    const img = document.createElement('img');
+    img.src = pokemon.sprites.front_default;
+    img.classList.add('cover-image');
+    document.getElementById('pokemon-image').appendChild(img);
+
+    // Mostra il nome del Pokémon
+    document.getElementById('nome-pokemon').textContent = pokemon.forms[0].name;
+
+    // Gestisci la GIF per l'hover effect
+    const hoverImg = document.getElementById('hover-image');
+    const gifUrl = `https://raw.githubusercontent.com/tdmalone/pokecss-media/master/graphics/pokemon/ani-front-shiny/${pokemon.forms[0].name}.gif`;
+
+    esiste(gifUrl).then((exists) => {
+        hoverImg.src = exists ? gifUrl : pokemon.sprites.front_default;
+    });
+}
+// function salvaNomi(){
+//     localStorage.setItem("nomiSalvati", JSON.stringify(nomi));
+//     alert("Nomi salvati con successo");
+// }
+// function visualizzaPokemon() {
+//     const pokemonImageContainer = document.getElementById("pokedex-pokemon-image");
+//     const pokemonNameContainer = document.getElementById("pokedex-nome-pokemon");
+    
+//     pokemonImageContainer.innerHTML = '';
+//     pokemonNameContainer.innerHTML = '';
+//     pokedex.forEach(pokemon => {
+//         const imgPokemon = document.createElement("img");
+//         imgPokemon.src = pokemon.sprites.front_default;
+//         const nomePokemon = document.createElement("p");
+//         nomePokemon.textContent = pokemon.forms[0].name;
+//         pokemonImageContainer.appendChild(imgPokemon);
+//         pokemonNameContainer.appendChild(nomePokemon);
+//     });
+// }
+function visualizzaPokemon() {
+    const pokemonImageContainer = document.getElementById("pokedex-pokemon-image");
+    // const pokemonNameContainer = document.getElementById("pokedex-nome-pokemon");
+
+    pokemonImageContainer.innerHTML = '';
+    // pokemonNameContainer.innerHTML = '';
+    pokedex.forEach(pokemon => {
+        // Crea l'immagine del Pokémon
+        const imgPokemon = document.createElement("img");
+        imgPokemon.src = pokemon.sprites.front_default;
+        imgPokemon.classList.add('pokedex-image'); // Aggiungi una classe per lo stile
+
+        // Aggiungi un listener al clic
+        imgPokemon.addEventListener('click', () => mostraPokemonInCard(pokemon));
+
+        // Crea il nome del Pokémon
+        // const nomePokemon = document.createElement("p");
+        // nomePokemon.textContent = pokemon.forms[0].name;
+
+        // Aggiungi gli elementi al container
+        pokemonImageContainer.appendChild(imgPokemon);
+        // pokemonNameContainer.appendChild(nomePokemon);
+    });
+}
+document.getElementById("pokeball").addEventListener("click",catchPokemon);
+document.addEventListener("DOMContentLoaded",loadPokedex);
+document.addEventListener("DOMContentLoaded", () => {
+    loadPokedex();
+    //visualizzaPokemon();
+});
+
+
+
+// const randomPokemonId = getRandomPokemonId();
+// fetchPokemonImage(randomPokemonId);
+style:
+:root {
+    --card-height: 450px; /* Aumentato per dare più spazio alla card */
+    --card-width: calc(var(--card-height) / 1.2); /* Aumentato per una card più larga */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column; /* Modifica fondamentale */
+    justify-content: flex-start; /* Posiziona gli elementi dall'alto */
+    align-items: center;
+    background: #191c29;
+    overflow: auto; /* Consenti scrolling se necessario */
+}
+
+.container {
+    position: relative;
+    width: 300px; /* Larghezza della card */
+    height: 400px; /* Altezza della card */
+    margin: auto; /* Centra la card nella pagina */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+    
+.card {
+    width: var(--card-width);
+    height: var(--card-height);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 0 36px;
+    perspective: 2500px;
+    margin: 0 50px;
+    cursor: pointer;
+    padding-bottom: 10px; /* Aggiungi spazio sotto la card per la Pokéball */
+}
+
+.cover-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Wrapper per l'immagine e la GIF */
+.wrapper {
+    transition: all 0.5s;
+    position: absolute;
+    width: 100%;
+    z-index: -1;
+}
+
+.card:hover .wrapper {
+    transform: perspective(900px) translateY(-5%) rotateX(25deg) translateZ(0);
+    box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
+    -webkit-box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
+    -moz-box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
+}
+
+.wrapper::before,
+.wrapper::after {
+    content: "";
+    opacity: 0;
+    width: 100%;
+    height: 80px;
+    transition: all 0.5s;
+    position: absolute;
+    left: 0;
+}
+
+.wrapper::before {
+    top: 0;
+    height: 100%;
+    background-image: linear-gradient(
+        to top,
+        transparent 46%,
+        rgba(12, 13, 19, 0.5) 68%,
+        rgba(12, 13, 19) 97%
+    );
+}
+
+.wrapper::after {
+    bottom: 0;
+    opacity: 1;
+    background-image: linear-gradient(
+        to bottom,
+        transparent 46%,
+        rgba(12, 13, 19, 0.5) 68%,
+        rgba(12, 13, 19) 97%
+    );
+}
+
+.card:hover .wrapper::before,
+.wrapper::after {
+    opacity: 1;
+}
+
+.card:hover .wrapper::after {
+    height: 120px;
+}
+
+.title {
+    width: 100%;
+    transition: transform 0.5s;
+}
+
+.card:hover .title {
+    transform: translate3d(0%, -50px, 100px);
+}
+
+.character {
+    width: 100%;
+    opacity: 0;
+    transition: all 0.5s;
+    position: absolute;
+    z-index: -1;
+}
+
+.card:hover .character {
+    opacity: 1;
+    transform: translate3d(0%, -30%, 100px);
+}
+
+/* Nuove aggiunte per la tua implementazione */
+
+/* Il contenitore per l'immagine statica del Pokémon */
+#pokemon-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    position: relative;
+}
+
+/* L'immagine hover (la GIF) */
+#hover-image {
+    position: absolute;
+    top: 0; /* Posiziona la GIF sopra la card */
+    left: 50%;
+    transform: translateX(-50%); /* Centra la GIF */
+    width: 120%; /* Aumentato per garantire che la GIF sia abbastanza grande */
+    height: auto;
+    opacity: 0; /* Inizialmente invisibile */
+    z-index: 10;  /* Assicurati che la GIF abbia un alto z-index, ma più basso della card */
+    transition: opacity 0.3s ease-in-out; /* Transizione per un effetto morbido */
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* La GIF dovrebbe diventare visibile solo quando la card è hoverata */
+.card:hover #hover-image {
+    opacity: 1; /* La GIF diventa visibile */
+    transition: opacity 0.3s ease-in-out; /* Transizione per l'opacità */
+}
+
+/* Nascondi l'immagine statica quando la card è hoverata */
+.card:hover #pokemon-image .cover-image {
+    opacity: 0; /* Nascondi l'immagine statica */
+}
+
+/* La copertura dell'immagine del Pokémon, visibile di default */
+#pokemon-image .cover-image {
+    opacity: 1; /* L'immagine statica è visibile di default */
+    transition: opacity 0.3s ease-in-out; /* Transizione dolce */
+}
+
+/* Stile per il nome del Pokémon */
+#nome-pokemon {
+    position: absolute;
+    bottom: 10px;
+    font-size: 22px; /* Aumentato per renderlo più visibile */
+    font-weight: bold;
+    color: #fff;
+    z-index: 2;
+}
+
+/* Stile per il pulsante Pokeball */
+/* #pokeball {
+    
+} */
+
+#pokeball {
+    position: absolute;
+    bottom: -140px;
+}
+
+#pokeball2 {
+    height: 50px;
+    font-weight: 50px;
+}
+
+#pokeball img {
+    width: 150px;
+    height: auto;
+}
+
+#home {
+    height: 50px;
+    font-weight: 50px;
+}
+.pokedex-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+    margin: 5px;
+    border: 2px solid transparent;
+    transition: transform 0.2s, border-color 0.2s;
+}
+    
+.pokedex-image:hover {
+    transform: scale(1.1);
+    border-color: #ffcb05; /* Colore ispirato ai Pokémon */
+}
+
+/* #pokedex-container {
+
+} */
+
+.buttons {
+    position: absolute;
+    top: -70px; /* Posiziona i pulsanti sopra la card */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px; /* Spaziatura tra i pulsanti */
+    z-index: 10; /* Porta i pulsanti in primo piano */
+}
+
+/* Stile per i button */
+.pokeball {
+    width: 50px; /* Dimensione del button */
+    height: 50px;
+    cursor: pointer; /* Cambia il cursore al passaggio */
+    transition: transform 0.3s; /* Effetto hover */
+}
+
+.pokeball:hover {
+    transform: scale(1.1); /* Leggero zoom quando si passa sopra */
+}
+index1:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style1.css">
+    <title>pokedex</title>
+</head>
+<body>
+    <script src="script1.js"></script>
+    <div id="pokedex-container">
+        <!-- <div class="card">
+            <div class="wrapper"> -->
+                <!-- <div id="pokedex-pokemon-image"></div> -->
+                <!-- <img id="hover-image" class="hover-image" src=""> -->
+            <!-- </div>
+            <p id="pokedex-nome-pokemon"></p>
+        </div> -->
+        <!-- <div id="pokedex-pokemon-image"></div> -->
+        <!-- <p id="pokedex-nome-pokemon"></p> -->
+    </div>
+
+</body>
+</html>
+script1:
+let pokedex=[];
+async function esiste(url) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+}
+function loadPokedex(){
+    pokedex = JSON.parse(localStorage.getItem("savedPokemon")) || [];
+    console.log("Pokedex caricata:", pokedex);
+}
+async function visualizzaPokemon() {
+    const pokemonContainer = document.getElementById("pokedex-container");
+    pokemonContainer.innerHTML = ''; // Pulisci il contenitore
+
+    if (!pokedex || pokedex.length === 0) {
+        console.error("Nessun Pokémon da visualizzare!");
+        return;
+    }
+
+    for (const pokemon of pokedex) {
+        try {
+            // Crea la card
+            const card = document.createElement('div');
+            card.classList.add('card');
+
+            // Wrapper per immagine statica e hover
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('wrapper');
+
+            const imgPokemon = document.createElement('img');
+            imgPokemon.src = pokemon.sprites.front_default;
+            imgPokemon.classList.add('pokemon-image');
+
+            const hoverImg = document.createElement('img');
+            hoverImg.classList.add('gif-image');
+            const shinyUrl = `https://raw.githubusercontent.com/tdmalone/pokecss-media/master/graphics/pokemon/ani-front-shiny/${pokemon.forms[0].name}.gif`;
+            hoverImg.src = (await esiste(shinyUrl)) ? shinyUrl : pokemon.sprites.front_default;
+            console.log("Visualizzando Pokémon:", pokemon);
+            console.log("Immagine statica:", pokemon.sprites.front_default);
+            console.log("GIF shiny URL:", shinyUrl);
+            console.log("Nome Pokémon:", pokemon.forms[0].name);
+
+            // Aggiungi immagini al wrapper
+            wrapper.appendChild(imgPokemon);
+            wrapper.appendChild(hoverImg);
+
+            // Nome del Pokémon
+            const nomePokemon = document.createElement('p');
+            nomePokemon.textContent = pokemon.forms[0].name;
+            nomePokemon.classList.add('nome-pokemon');
+
+            // Aggiungi wrapper e nome alla card
+            card.appendChild(wrapper);
+            card.appendChild(nomePokemon);
+
+            // Aggiungi la card al container
+            pokemonContainer.appendChild(card);
+        } catch (error) {
+            console.error("Errore nella visualizzazione del Pokémon:", pokemon, error);
+        }
+    }
+}
+document.addEventListener("DOMContentLoaded",loadPokedex);
+document.addEventListener("DOMContentLoaded", () => {
+    loadPokedex();
+    if (pokedex.length > 0) {
+        visualizzaPokemon(); // Visualizza i Pokémon se ce ne sono
+    } else {
+        console.log("Nessun Pokémon salvato nella Pokedex.");
+    }
+});
+style1:
+:root {
+    --card-height: 450px; /* Aumentato per dare più spazio alla card */
+    --card-width: calc(var(--card-height) / 1.2); /* Aumentato per una card più larga */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column; /* Modifica fondamentale */
+    justify-content: flex-start; /* Posiziona gli elementi dall'alto */
+    align-items: center;
+    background: #191c29;
+    overflow: auto; /* Consenti scrolling se necessario */
+}
+    
+.card {
+    width: var(--card-width);
+    height: var(--card-height);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 0 36px;
+    perspective: 2500px;
+    margin: 0 50px;
+    cursor: pointer;
+    padding-bottom: 10px; /* Aggiungi spazio sotto la card per la Pokéball */
+}
+
+.cover-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    z-index: 2;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out, z-index 0.3s ease-in-out;
+}
+
+.gif-image {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Adatta l'immagine alla card */
+    opacity: 0; /* Invisibile di default */
+    z-index: 3; /* Sopra l'immagine statica */
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* .gif-image {
+    opacity: 1;
+} */
+
+/* .pokemon-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    z-index: 2;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+} */
+
+.pokemon-image {
+    opacity: 1; /* Nascondila di default */
+}
+
+.card:hover .gif-image {
+    opacity: 1; /* La GIF diventa visibile */
+    z-index: 3; /* Assicurati che sia sopra */
+}
+
+.card:hover .pokemon-image {
+    opacity: 0; /* La rende invisibile */
+    z-index: 1; /* La manda sotto la GIF */
+}
+.card:hover .cover-image {
+    opacity: 0; /* La rende invisibile */
+    z-index: 1; /* La manda sotto la GIF */
+}
+
+.wrapper {
+    transition: all 0.5s;
+    position: absolute;
+    width: 100%;
+    z-index: -1;
+}
+
+.card:hover .wrapper {
+    transform: perspective(900px) translateY(-5%) rotateX(25deg) translateZ(0);
+    box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
+    -webkit-box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
+    -moz-box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
+}
+
+.wrapper::before,
+.wrapper::after {
+    content: "";
+    opacity: 0;
+    width: 100%;
+    height: 80px;
+    transition: all 0.5s;
+    position: absolute;
+    left: 0;
+}
+
+.wrapper::before {
+    top: 0;
+    height: 100%;
+    background-image: linear-gradient(
+        to top,
+        transparent 46%,
+        rgba(12, 13, 19, 0.5) 68%,
+        rgba(12, 13, 19) 97%
+    );
+}
+
+.wrapper::after {
+    bottom: 0;
+    opacity: 1;
+    background-image: linear-gradient(
+        to bottom,
+        transparent 46%,
+        rgba(12, 13, 19, 0.5) 68%,
+        rgba(12, 13, 19) 97%
+    );
+}
+
+.card:hover .wrapper::before,
+.wrapper::after {
+    opacity: 1;
+}
+
+.card:hover .wrapper::after {
+    height: 120px;
+}
+
+.title {
+    width: 100%;
+    transition: transform 0.5s;
+}
+
+.card:hover .title {
+    transform: translate3d(0%, -50px, 100px);
+}
+
+.pokedex-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px; /* Spazio tra le card */
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.pokedex-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hidden {
+    display: none;
+}
+
+.pokedex-image, .hover-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.card:hover .wrapper img {
+    opacity: 0.5;
+}

@@ -1,0 +1,10 @@
+/* const imageUrl = pokemonInfo[0].sprites.front_default;
+    const img = document.createElement('img');
+    img.src = imageUrl; */
+    const nomePokemon = document.createElement('p');
+    nomePokemon.textContent = pokemonInfo[0].name;
+    console.log(nomePokemon.textContent)
+    /* document.getElementById('pokedex-pokemon-image').appendChild(img); */
+    document.getElementById('pokedex-nome-pokemon').appendChild(nomePokemon);
+    /* console.log(pokemonInfo); */
+    /* console.log(pokemonInfo[0].name); */
